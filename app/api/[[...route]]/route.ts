@@ -1,18 +1,32 @@
-import { Hono } from 'hono'
-import { handle } from 'hono/vercel'
+import {Hono} from "hono"
+import {handle} from "hono/vercel";
+import { HTTPException } from "hono/http-exception"
 
 import authors from './authors'
 import books from './books'
+import accounts from "./accounts";
 
-export const runtime = "edge"
+export const runtime = "edge";
 
-const app = new Hono().basePath('/api')
+const app = new Hono().basePath("/api");
 
-app.route('/authors', authors)
-app.route('/books', books)
+app.onError((err, c) => {
+  if(err instanceof HTTPException){
+    return err.getResponse();
+  }
 
-export const GET = handle(app)
-export const POST = handle(app)
-export const PUT = handle(app)
-export const PATCH = handle(app)
-export const DELETE = handle(app)
+  return c.json({error: "Internal Server Error"}, 500);
+});
+
+const routes = app
+  .route('/authors', authors)
+  .route('/books', books)
+  .route("/accounts", accounts);
+
+export const GET = handle(app);
+export const POST = handle(app);
+export const PUT = handle(app);
+export const PATCH = handle(app);
+export const DELETE = handle(app);
+
+export type AppType = typeof routes;
